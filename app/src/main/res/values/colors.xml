@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ink">#0A0C10</color>
+    <color name="paper">#F5F6FA</color>
+    <color name="violet">#7C5CFF</color>
+    <color name="cyan">#19C6FF</color>
+    <color name="launcher_background">#0E1018</color>
+</resources>

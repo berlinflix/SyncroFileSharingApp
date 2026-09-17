@@ -99,6 +99,10 @@ class SyncroEngine(
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Serializes transport control calls off the caller's (often UI) thread. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val control = Dispatchers.IO.limitedParallelism(1)
     private val transports = MutableStateFlow<List<Transport>>(emptyList())
     private val runners = ConcurrentHashMap<String, Runner>()
     private val incomingSlots = Semaphore(MAX_PENDING_INCOMING)
@@ -146,27 +150,34 @@ class SyncroEngine(
 
     fun addTransport(transport: Transport) {
         transports.update { (it + transport).sortedBy { t -> t.priority } }
-        transport.start(host)
-        transport.setAdvertising(_visible.value)
-        transport.setScanning(_scanning.value)
+        scope.launch(control) {
+            transport.start(host)
+            transport.setAdvertising(_visible.value)
+            transport.setScanning(_scanning.value)
+        }
     }
 
     fun transport(id: String): Transport? = transports.value.firstOrNull { it.id == id }
 
     fun setVisible(enabled: Boolean) {
         _visible.value = enabled
-        transports.value.forEach { runCatching { it.setAdvertising(enabled) }.onFailure { e -> platform.log("setAdvertising failed", e) } }
+        scope.launch(control) {
+            transports.value.forEach { runCatching { it.setAdvertising(_visible.value) }.onFailure { e -> platform.log("setAdvertising failed", e) } }
+        }
     }
 
     fun setScanning(enabled: Boolean) {
         _scanning.value = enabled
-        transports.value.forEach { runCatching { it.setScanning(enabled) }.onFailure { e -> platform.log("setScanning failed", e) } }
+        scope.launch(control) {
+            transports.value.forEach { runCatching { it.setScanning(_scanning.value) }.onFailure { e -> platform.log("setScanning failed", e) } }
+        }
     }
 
     /** Re-announces after a device rename or network change. */
     fun refreshPresence() {
-        if (_visible.value) {
-            transports.value.forEach {
+        scope.launch(control) {
+            if (!_visible.value) return@launch
+            transports.value.filter { it.id == LanTransport.ID }.forEach {
                 runCatching {
                     it.setAdvertising(false)
                     it.setAdvertising(true)

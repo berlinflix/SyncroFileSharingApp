@@ -17,6 +17,7 @@ import com.syncro.core.transfer.TransferInfo
 import com.syncro.core.transfer.TransferItemInfo
 import com.syncro.core.transfer.TransferPhase
 import com.syncro.core.util.Format
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -64,6 +65,7 @@ class EngineTransferTest {
             engines += engine
             engine.addTransport(lan)
             engine.setVisible(true)
+            runBlocking { withTimeout(5_000) { lan.port.filterNotNull().first() } }
         }
 
         val address: String get() = "127.0.0.1:${lan.port.value}"
