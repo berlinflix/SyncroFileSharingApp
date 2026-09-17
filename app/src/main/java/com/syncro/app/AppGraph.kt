@@ -90,8 +90,8 @@ class AppGraph(private val context: Context) {
 
         // Visibility: on while the app is open, and in the background too if the user allows it.
         scope.launch {
-            combine(settings.visible, settings.backgroundVisible, foreground) { visible, background, fg ->
-                visible && (fg || background)
+            combine(settings.visible, settings.backgroundVisible, foreground, settings.onboarded) { visible, background, fg, onboarded ->
+                onboarded && visible && (fg || background)
             }.distinctUntilChanged().collect { engine.setVisible(it) }
         }
 

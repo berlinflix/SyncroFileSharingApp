@@ -135,7 +135,7 @@ fun HomeScreen(
                         Column(Modifier.weight(1f)) {
                             Text("Share without Wi-Fi", style = MaterialTheme.typography.titleSmall, color = colors.text)
                             Text(
-                                "Allow Nearby devices so phones can connect directly, even with no shared network.",
+                                "Allow nearby devices and precise location (Android requires it for Bluetooth discovery) so phones connect directly with no shared network.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.textMuted,
                             )

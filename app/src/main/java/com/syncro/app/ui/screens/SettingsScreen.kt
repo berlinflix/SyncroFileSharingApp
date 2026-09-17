@@ -139,7 +139,7 @@ fun SettingsScreen(state: SettingsState, actions: SettingsActions) {
                                 Text("Direct connections", style = MaterialTheme.typography.titleSmall, color = colors.text)
                                 Text(
                                     if (state.nearbyAvailable) "Phones connect over Bluetooth + Wi-Fi Direct when there's no shared network"
-                                    else "Needs the Nearby devices permission — tap to allow",
+                                    else "Needs nearby devices + precise location — tap to allow",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.textMuted,
                                 )

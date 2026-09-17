@@ -192,7 +192,7 @@ internal class LanDiscovery(
                 try {
                     val packet = DatagramPacket(buffer, buffer.size)
                     socket.receive(packet)
-                    handle(packet)
+                    handle(packet, socket)
                 } catch (_: SocketException) {
                     break
                 } catch (e: Exception) {
@@ -203,7 +203,7 @@ internal class LanDiscovery(
         }
     }
 
-    private fun handle(packet: DatagramPacket) {
+    private fun handle(packet: DatagramPacket, receivedOn: DatagramSocket) {
         val beacon = runCatching {
             json.decodeFromString(Beacon.serializer(), String(packet.data, packet.offset, packet.length, Charsets.UTF_8))
         }.getOrNull() ?: return
@@ -218,8 +218,14 @@ internal class LanDiscovery(
                     onPeer(DeviceInfo(beacon.i, sanitizeDeviceName(beacon.n), DeviceType.parse(beacon.t)), from, beacon.port)
                 }
                 if (beacon.o == "q" && advertising && serverPort() != null) {
-                    sendTo(beacon("a"), from, packet.port)
-                    if (packet.port != discoveryPort) sendTo(beacon("a"), from, discoveryPort)
+                    val reply = beacon("a")
+                    // Answer from the socket the query arrived on so the 5-tuple matches: NATs and stateful
+                    // firewalls (Windows Firewall, emulator/VM networking) only pass replies from that port.
+                    send(receivedOn, reply, from, packet.port)
+                    // Also answer through the socket bound to the matching network (Android routing), and to the
+                    // well-known port in case the querier's ephemeral socket is gone.
+                    sendTo(reply, from, packet.port)
+                    if (packet.port != discoveryPort) sendTo(reply, from, discoveryPort)
                 }
             }
         }

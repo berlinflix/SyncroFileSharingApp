@@ -135,24 +135,27 @@ object Crypto {
     fun constantTimeEquals(a: ByteArray, b: ByteArray): Boolean = MessageDigest.isEqual(a, b)
 
     /**
-     * On HotSpot JVMs AES-GCM only reaches hardware-accelerated speed once the JIT has compiled the cipher
-     * with its intrinsics. Many small operations get there far sooner than a first multi-hundred-megabyte
-     * transfer would, so desktop apps call this once in the background at startup.
+     * On HotSpot JVMs AES-GCM only reaches hardware-accelerated speed once the JIT has compiled the exact code
+     * path in use. Records always carry associated data, and warming up without it leaves the real path
+     * interpreted (~30 MB/s) for the first few hundred megabytes. Desktop apps call this once at startup.
      */
     fun warmUp(iterations: Int = 3_000) {
-        val key = javax.crypto.spec.SecretKeySpec(randomBytes(32), "AES")
+        val key = SecretKeySpec(randomBytes(32), "AES")
+        val header = ByteArray(4)
         val plain = ByteArray(16 * 1024)
         val sealed = ByteArray(plain.size + 16)
         val opened = ByteArray(plain.size + 16)
         val encrypt = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
         val decrypt = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
-        val nonce = ByteArray(12)
         for (i in 0 until iterations) {
+            val nonce = ByteArray(12)
             nonce[8] = (i ushr 24).toByte(); nonce[9] = (i ushr 16).toByte(); nonce[10] = (i ushr 8).toByte(); nonce[11] = i.toByte()
-            val spec = javax.crypto.spec.GCMParameterSpec(128, nonce.copyOf())
+            val spec = javax.crypto.spec.GCMParameterSpec(128, nonce)
             encrypt.init(javax.crypto.Cipher.ENCRYPT_MODE, key, spec)
+            encrypt.updateAAD(header)
             val n = encrypt.doFinal(plain, 0, plain.size, sealed, 0)
             decrypt.init(javax.crypto.Cipher.DECRYPT_MODE, key, spec)
+            decrypt.updateAAD(header)
             decrypt.doFinal(sealed, 0, n, opened, 0)
         }
     }

@@ -109,7 +109,7 @@ class NearbyTransport(private val context: Context) : Transport {
 
     @Synchronized
     private fun applyAdvertising() {
-        val should = wantAdvertising && hasPermissions(context)
+        val should = wantAdvertising && hasAdvertisingPermissions(context)
         if (should && !advertising) {
             advertising = true
             val options = AdvertisingOptions.Builder().setStrategy(STRATEGY).build()
@@ -263,16 +263,21 @@ class NearbyTransport(private val context: Context) : Transport {
                 add(Manifest.permission.BLUETOOTH_ADVERTISE)
                 add(Manifest.permission.BLUETOOTH_CONNECT)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                add(Manifest.permission.NEARBY_WIFI_DEVICES)
-            } else {
-                add(Manifest.permission.ACCESS_FINE_LOCATION)
-            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.NEARBY_WIFI_DEVICES)
+            // Play services rejects startDiscovery() without precise location, even on Android 13+.
+            addAll(LOCATION_PERMISSIONS)
         }
 
-        fun hasPermissions(context: Context): Boolean = requiredPermissions().all {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-        }
+        fun hasPermissions(context: Context): Boolean = requiredPermissions().all { granted(context, it) }
+
+        /** Being discoverable doesn't need location; finding others does. */
+        private fun hasAdvertisingPermissions(context: Context): Boolean =
+            requiredPermissions().filterNot { it in LOCATION_PERMISSIONS }.all { granted(context, it) }
+
+        private val LOCATION_PERMISSIONS = listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
+
+        private fun granted(context: Context, permission: String) =
+            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
         /** Endpoint names carry `SY1|<type>|<device id>|<name>` so peers merge with LAN discoveries. */
         private fun encodeName(self: DeviceInfo): String =
