@@ -85,6 +85,7 @@ fun main(args: Array<String>) {
                     when (event) {
                         is DesktopNotification.Request -> {
                             windowVisible = true
+                            windowState.isMinimized = false
                             window.toFront()
                             if (!window.isFocused) {
                                 trayState.sendNotification(

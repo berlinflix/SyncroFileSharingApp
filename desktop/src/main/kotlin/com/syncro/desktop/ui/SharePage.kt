@@ -315,7 +315,7 @@ private fun DevicesCard(peers: List<Peer>, canSend: Boolean, onSend: (Peer) -> U
                     value = address,
                     onValueChange = { address = it.trim() },
                     singleLine = true,
-                    placeholder = { Text("192.168.1.20") },
+                    placeholder = { Text("e.g. 192.168.1.20", color = c.textMuted.copy(alpha = 0.6f)) },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = c.accent, unfocusedBorderColor = c.outline),
                     modifier = Modifier.weight(1f).height(52.dp),

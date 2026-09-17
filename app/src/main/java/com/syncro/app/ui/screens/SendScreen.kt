@@ -204,8 +204,15 @@ private fun SelectionThumb(item: SelectedItem, onRemove: () -> Unit) {
                 .background(colors.surfaceHigh),
             contentAlignment = Alignment.Center,
         ) {
-            if (item.uri != null && isVisualMedia(item.name, item.mimeType)) {
-                AsyncImage(model = item.uri, contentDescription = item.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            var imageFailed by remember(item.key) { mutableStateOf(false) }
+            if (item.uri != null && isVisualMedia(item.name, item.mimeType) && !imageFailed) {
+                AsyncImage(
+                    model = item.uri,
+                    contentDescription = item.name,
+                    contentScale = ContentScale.Crop,
+                    onError = { imageFailed = true },
+                    modifier = Modifier.fillMaxSize(),
+                )
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(6.dp)) {
                     Icon(iconForFile(item.name, item.mimeType, item.isText), null, tint = colors.accent, modifier = Modifier.size(26.dp))

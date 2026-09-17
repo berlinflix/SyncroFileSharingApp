@@ -210,7 +210,7 @@ internal class LanDiscovery(
         if (beacon.p != Syncro.PROTOCOL || beacon.v != Syncro.PROTOCOL_VERSION) return
         val me = self()
         if (beacon.i == me.id || !isValidId(beacon.i)) return
-        val from = packet.address ?: return
+        val from = packet.address?.let(::normalize) ?: return
         when (beacon.o) {
             "b" -> onBye(beacon.i, from)
             "a", "q" -> {
@@ -291,6 +291,14 @@ internal class LanDiscovery(
         } catch (_: Exception) {
             // Unreachable networks, filtered broadcasts and closed sockets are all expected here.
         }
+    }
+
+    /** Dual-stack sockets report IPv4 peers as ::ffff:a.b.c.d (sometimes with a scope id); use plain IPv4. */
+    private fun normalize(address: InetAddress): InetAddress {
+        if (address !is java.net.Inet6Address) return address
+        val b = address.address
+        val mapped = (0 until 10).all { b[it] == 0.toByte() } && b[10] == 0xff.toByte() && b[11] == 0xff.toByte()
+        return if (mapped) InetAddress.getByAddress(b.copyOfRange(12, 16)) else address
     }
 
     private fun isValidId(id: String) = id.length == 16 && id.all { it in '0'..'9' || it in 'a'..'f' }

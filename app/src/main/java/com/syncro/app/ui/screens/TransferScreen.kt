@@ -201,7 +201,11 @@ private fun headline(transfer: TransferInfo): String {
         TransferPhase.AWAITING_DECISION -> "$peer wants to share"
         TransferPhase.TRANSFERRING -> if (sending) "Sending to $peer" else "Receiving from $peer"
         TransferPhase.COMPLETED -> if (sending) "Sent to $peer" else "Received from $peer"
-        TransferPhase.REJECTED -> if (sending) "$peer declined" else "Declined"
+        TransferPhase.REJECTED -> when {
+            !sending -> "Declined"
+            transfer.message == "Declined" -> "$peer declined"
+            else -> "Not accepted"
+        }
         TransferPhase.CANCELLED -> "Transfer cancelled"
         TransferPhase.FAILED -> "Transfer failed"
     }
