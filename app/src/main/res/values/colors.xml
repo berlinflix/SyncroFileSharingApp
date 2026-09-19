@@ -4,5 +4,6 @@
     <color name="paper">#F5F6FA</color>
     <color name="violet">#7C5CFF</color>
     <color name="cyan">#19C6FF</color>
-    <color name="launcher_background">#0E1018</color>
+    <color name="launcher_background">#7C5CFF</color>
+    <color name="brand_mark">#7C5CFF</color>
 </resources>

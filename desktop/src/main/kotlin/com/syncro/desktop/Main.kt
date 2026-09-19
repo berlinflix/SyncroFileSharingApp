@@ -77,6 +77,7 @@ fun main(args: Array<String>) {
             title = "Syncro",
             icon = icon,
             state = windowState,
+            undecorated = true,
         ) {
             LaunchedEffect(Unit) { window.minimumSize = Dimension(960, 640) }
 
@@ -110,7 +111,14 @@ fun main(args: Array<String>) {
                 }
             }
 
-            App(controller, window)
+            App(controller, windowState, onClose = {
+                if (settings.closeToTray) {
+                    windowVisible = false
+                } else {
+                    graph.engine.shutdown()
+                    exitApplication()
+                }
+            })
         }
     }
 }

@@ -10,22 +10,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +43,8 @@ import com.syncro.app.ui.components.GradientButton
 import com.syncro.app.ui.components.PinBadge
 import com.syncro.app.ui.components.PulseRings
 import com.syncro.app.ui.components.SoftButton
+import com.syncro.app.ui.components.SyncroAlertDialog
+import com.syncro.app.ui.components.SyncroInput
 import com.syncro.app.ui.iconForFile
 import com.syncro.app.ui.theme.Syncro
 import com.syncro.core.DeviceType
@@ -64,6 +63,7 @@ fun IncomingRequestDialog(request: TransferInfo, onRespond: (Decision) -> Unit) 
         Column(
             Modifier
                 .padding(20.dp)
+                .widthIn(max = 360.dp)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(32.dp))
                 .background(colors.surface)
@@ -166,50 +166,45 @@ fun IncomingRequestDialog(request: TransferInfo, onRespond: (Decision) -> Unit) 
 fun TextComposeDialog(onDismiss: () -> Unit, onSend: (String) -> Unit) {
     val context = LocalContext.current
     var text by rememberSaveable { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Send text") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    placeholder = { Text("Type a note, link or code…") },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp),
-                )
-                Spacer(Modifier.height(8.dp))
-                TextButton(onClick = {
+    SyncroAlertDialog(
+        title = "Send text",
+        confirmText = "Next",
+        confirmEnabled = text.isNotBlank(),
+        onConfirm = { onSend(text) },
+        onDismiss = onDismiss,
+    ) {
+        SyncroInput(value = text, onValueChange = { text = it }, placeholder = "Type a note, link or code…", multiline = true)
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .clickable {
                     val clip = context.getSystemService(ClipboardManager::class.java)?.primaryClip
                     val pasted = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(context)?.toString()
                     if (!pasted.isNullOrEmpty()) text = pasted
-                }) {
-                    Icon(Icons.Rounded.ContentPaste, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Paste clipboard")
                 }
-            }
-        },
-        confirmButton = { TextButton(onClick = { onSend(text) }, enabled = text.isNotBlank()) { Text("Next") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        containerColor = Syncro.colors.surface,
-    )
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Rounded.ContentPaste, null, tint = Syncro.colors.accent, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Paste clipboard", style = MaterialTheme.typography.labelMedium, color = Syncro.colors.accent)
+        }
+    }
 }
 
 @Composable
 fun RenameDialog(current: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var text by rememberSaveable { mutableStateOf(current) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Device name") },
-        text = {
-            Column {
-                Text("This is how other devices see you.", style = MaterialTheme.typography.bodyMedium, color = Syncro.colors.textMuted)
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(value = text, onValueChange = { text = it.take(40) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            }
-        },
-        confirmButton = { TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        containerColor = Syncro.colors.surface,
-    )
+    SyncroAlertDialog(
+        title = "Device name",
+        confirmText = "Save",
+        confirmEnabled = text.isNotBlank(),
+        onConfirm = { onSave(text) },
+        onDismiss = onDismiss,
+    ) {
+        Text("This is how other devices see you.", style = MaterialTheme.typography.bodyMedium, color = Syncro.colors.textMuted)
+        Spacer(Modifier.height(12.dp))
+        SyncroInput(value = text, onValueChange = { text = it.take(40) })
+    }
 }

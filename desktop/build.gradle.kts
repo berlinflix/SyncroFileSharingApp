@@ -26,7 +26,10 @@ dependencies {
     implementation(compose.materialIconsExtended)
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.zxing.core)
+    implementation(libs.jna.platform)
 }
+
+val appVersion = "2.0.0"
 
 compose.desktop {
     application {
@@ -40,8 +43,9 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Dmg, TargetFormat.Deb)
             packageName = "Syncro"
-            packageVersion = "2.0.0"
-            description = "Fast, end-to-end encrypted file sharing with your phone"
+            packageVersion = appVersion
+            // Shown by Windows in Task Manager and the firewall prompt.
+            description = "Syncro"
             vendor = "Syncro"
             copyright = "Syncro"
             modules("java.naming", "jdk.crypto.ec", "java.management", "jdk.unsupported")
@@ -66,4 +70,20 @@ compose.desktop {
             isEnabled.set(false)
         }
     }
+}
+
+// Branded single-file installer: ./gradlew :desktop:packageSetup -Psyncro.packagingJdk=<JDK with jpackage>
+tasks.register<Exec>("packageSetup") {
+    group = "compose desktop"
+    description = "Builds desktop/build/setup/SyncroSetup-<version>.exe, the Syncro-styled per-user installer."
+    dependsOn("createReleaseDistributable")
+    val appImage = layout.buildDirectory.dir("compose/binaries/main-release/app/Syncro").get().asFile
+    val script = rootProject.file("installer/build.ps1")
+    inputs.dir(rootProject.file("installer"))
+    inputs.dir(appImage)
+    outputs.dir(layout.buildDirectory.dir("setup"))
+    commandLine(
+        "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script.absolutePath,
+        "-AppImage", appImage.absolutePath, "-Version", appVersion,
+    )
 }

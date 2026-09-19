@@ -68,6 +68,7 @@ import com.syncro.core.engine.Peer
 import com.syncro.core.transfer.TransferPhase
 import com.syncro.core.util.Format
 import com.syncro.desktop.DesktopController
+import com.syncro.desktop.DesktopDialog
 import com.syncro.desktop.DesktopItem
 import com.syncro.desktop.Platform
 import java.awt.FileDialog
@@ -84,7 +85,6 @@ fun SharePage(controller: DesktopController, window: java.awt.Window) {
     val settings by controller.graph.settings.state.collectAsState()
     val addresses by controller.addresses.collectAsState()
     val port by controller.graph.lan.port.collectAsState()
-    var composingText by remember { mutableStateOf(false) }
 
     val chooseFiles = {
         val dialog = FileDialog(window as? Frame, "Choose files to send", FileDialog.LOAD).apply { isMultipleMode = true }
@@ -99,7 +99,7 @@ fun SharePage(controller: DesktopController, window: java.awt.Window) {
                 selection = selection,
                 onDropFiles = controller::addFiles,
                 onChooseFiles = chooseFiles,
-                onText = { composingText = true },
+                onText = { controller.showDialog(DesktopDialog.SEND_TEXT) },
                 onRemove = controller::remove,
                 onClear = controller::clearSelection,
             )
@@ -135,12 +135,6 @@ fun SharePage(controller: DesktopController, window: java.awt.Window) {
         }
     }
 
-    if (composingText) {
-        TextDialog(onDismiss = { composingText = false }, onAdd = {
-            composingText = false
-            controller.addText(it)
-        })
-    }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -311,15 +305,7 @@ private fun DevicesCard(peers: List<Peer>, canSend: Boolean, onSend: (Peer) -> U
             Text("Or send to an address", style = MaterialTheme.typography.labelMedium, color = c.textMuted)
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = address,
-                    onValueChange = { address = it.trim() },
-                    singleLine = true,
-                    placeholder = { Text("e.g. 192.168.1.20", color = c.textMuted.copy(alpha = 0.6f)) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = c.accent, unfocusedBorderColor = c.outline),
-                    modifier = Modifier.weight(1f).height(52.dp),
-                )
+                SyncroInput(address, { address = it.trim() }, Modifier.weight(1f), placeholder = "e.g. 192.168.1.20")
                 Spacer(Modifier.width(10.dp))
                 SecondaryButton("Send", onClick = { if (address.isNotBlank()) onSendToAddress(address) }, icon = Icons.Rounded.Send)
             }
@@ -379,27 +365,4 @@ fun qrImage(content: String, size: Int = 360): androidx.compose.ui.graphics.Imag
     val image = BufferedImage(matrix.width, matrix.height, BufferedImage.TYPE_INT_RGB)
     for (y in 0 until matrix.height) for (x in 0 until matrix.width) image.setRGB(x, y, if (matrix[x, y]) 0x0E1116 else 0xFFFFFF)
     return image.toComposeImageBitmap()
-}
-
-@Composable
-private fun TextDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Send text") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    placeholder = { Text("A note, link or code…") },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp),
-                )
-                TextButton(onClick = { Platform.clipboardText()?.let { text = it } }) { Text("Paste clipboard") }
-            }
-        },
-        confirmButton = { TextButton(onClick = { onAdd(text) }, enabled = text.isNotBlank()) { Text("Add") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        containerColor = Theme.colors.surface,
-    )
 }

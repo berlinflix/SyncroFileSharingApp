@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bolt
@@ -31,8 +30,6 @@ import androidx.compose.material.icons.rounded.Smartphone
 import androidx.compose.material.icons.rounded.WifiTethering
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.syncro.app.ui.components.GradientButton
 import com.syncro.app.ui.components.IconBubble
+import com.syncro.app.ui.components.SyncroInput
 import com.syncro.app.ui.theme.Syncro
 import kotlin.math.cos
 import kotlin.math.sin
@@ -79,14 +77,11 @@ fun OnboardingScreen(initialName: String, onFinish: (String) -> Unit) {
         Feature(Icons.Rounded.Lock, "Private by design", "Fresh keys for every transfer and a PIN to verify who you're talking to.")
         Feature(Icons.Rounded.DesktopWindows, "Works with your PC", "Get Syncro for Windows and move files both ways.")
         Spacer(Modifier.height(20.dp))
-        OutlinedTextField(
+        SyncroInput(
             value = name,
             onValueChange = { name = it.take(40) },
-            label = { Text("Your device name") },
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colors.accent, focusedLabelColor = colors.accent),
-            modifier = Modifier.fillMaxWidth(),
+            label = "Your device name",
+            labelBackground = colors.background,
         )
         Spacer(Modifier.height(20.dp))
         GradientButton("Get started", onClick = { onFinish(name) }, modifier = Modifier.fillMaxWidth(), enabled = name.isNotBlank())

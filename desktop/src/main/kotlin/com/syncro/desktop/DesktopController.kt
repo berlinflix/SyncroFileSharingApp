@@ -18,6 +18,8 @@ import java.io.File
 
 enum class Page { SHARE, ACTIVITY, DEVICES, SETTINGS }
 
+enum class DesktopDialog { SEND_TEXT, CHOOSE_FOLDER }
+
 data class DesktopItem(val key: String, val item: SendItem, val file: File?) {
     val name: String get() = item.name
     val size: Long get() = item.size
@@ -35,6 +37,9 @@ class DesktopController(val graph: DesktopGraph) {
 
     private val _addresses = MutableStateFlow<List<String>>(emptyList())
     val addresses: StateFlow<List<String>> = _addresses.asStateFlow()
+
+    private val _dialog = MutableStateFlow<DesktopDialog?>(null)
+    val dialog: StateFlow<DesktopDialog?> = _dialog.asStateFlow()
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
@@ -55,6 +60,10 @@ class DesktopController(val graph: DesktopGraph) {
 
     fun open(page: Page) {
         _page.value = page
+    }
+
+    fun showDialog(dialog: DesktopDialog?) {
+        _dialog.value = dialog
     }
 
     fun addFiles(files: List<File>) {

@@ -30,13 +30,10 @@ import androidx.compose.material.icons.rounded.Keyboard
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material.icons.rounded.WifiTethering
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +57,8 @@ import com.syncro.app.ui.components.ScreenTopBar
 import com.syncro.app.ui.components.SectionLabel
 import com.syncro.app.ui.components.SoftButton
 import com.syncro.app.ui.components.SyncroCard
+import com.syncro.app.ui.components.SyncroAlertDialog
+import com.syncro.app.ui.components.SyncroInput
 import com.syncro.app.ui.iconForFile
 import com.syncro.app.ui.isVisualMedia
 import com.syncro.app.ui.theme.Syncro
@@ -274,29 +273,24 @@ private fun PeerRow(peer: Peer, enabled: Boolean, onClick: () -> Unit) {
 @Composable
 private fun AddressDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var text by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Send to an address") },
-        text = {
-            Column {
-                Text(
-                    "Type the IP address shown on the other device, e.g. 192.168.1.20. You'll confirm the PIN on both screens.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Syncro.colors.textMuted,
-                )
-                Spacer(Modifier.height(14.dp))
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it.trim() },
-                    singleLine = true,
-                    placeholder = { Text("192.168.1.20") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        confirmButton = { TextButton(onClick = { onConfirm(text) }, enabled = text.isNotBlank()) { Text("Send") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        containerColor = Syncro.colors.surface,
-    )
+    SyncroAlertDialog(
+        title = "Send to an address",
+        confirmText = "Send",
+        confirmEnabled = text.isNotBlank(),
+        onConfirm = { onConfirm(text) },
+        onDismiss = onDismiss,
+    ) {
+        Text(
+            "Type the IP address shown on the other device, e.g. 192.168.1.20. You'll confirm the PIN on both screens.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Syncro.colors.textMuted,
+        )
+        Spacer(Modifier.height(14.dp))
+        SyncroInput(
+            value = text,
+            onValueChange = { text = it.trim() },
+            placeholder = "192.168.1.20",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+        )
+    }
 }

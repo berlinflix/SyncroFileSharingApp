@@ -48,16 +48,25 @@ import androidx.compose.runtime.collectAsState
 import com.syncro.core.transfer.TransferPhase
 import com.syncro.desktop.DesktopController
 import com.syncro.desktop.Page
+import com.syncro.desktop.DesktopDialog
+import com.syncro.desktop.WindowsFrame
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.window.FrameWindowScope
+import androidx.compose.ui.window.WindowState
 
 @Composable
-fun App(controller: DesktopController, window: java.awt.Window) {
+fun FrameWindowScope.App(controller: DesktopController, state: WindowState, onClose: () -> Unit) {
     val settings by controller.graph.settings.state.collectAsState()
     val page by controller.page.collectAsState()
     val transfers by controller.engine.transfers.collectAsState()
     val message by controller.message.collectAsState()
+    val dialog by controller.dialog.collectAsState()
 
     SyncroDesktopTheme(settings.theme) {
         val c = Theme.colors
+        LaunchedEffect(c.isDark) { WindowsFrame.style(window, c.outline.toArgb() and 0xFFFFFF) }
+        WindowChrome(state, onClose) {
         Box(Modifier.fillMaxSize().background(c.background)) {
             Row(Modifier.fillMaxSize()) {
                 Sidebar(
@@ -80,6 +89,26 @@ fun App(controller: DesktopController, window: java.awt.Window) {
                 }
             }
 
+            when (dialog) {
+                DesktopDialog.SEND_TEXT -> SendTextDialog(
+                    onDismiss = { controller.showDialog(null) },
+                    onAdd = {
+                        controller.addText(it)
+                        controller.showDialog(null)
+                    },
+                )
+                DesktopDialog.CHOOSE_FOLDER -> ChooseFolderDialog(
+                    current = settings.downloadDir,
+                    window = window,
+                    onDismiss = { controller.showDialog(null) },
+                    onSelect = { path ->
+                        controller.graph.settings.update { it.copy(downloadDir = path) }
+                        controller.showDialog(null)
+                    },
+                )
+                null -> Unit
+            }
+
             transfers.firstOrNull { it.phase == TransferPhase.AWAITING_DECISION }?.let { request ->
                 IncomingRequestOverlay(request, onRespond = { controller.respond(request.id, it) })
             }
@@ -99,6 +128,7 @@ fun App(controller: DesktopController, window: java.awt.Window) {
                     Text(message.orEmpty(), color = c.text, style = MaterialTheme.typography.bodyMedium)
                 }
             }
+        }
         }
     }
 }
@@ -120,13 +150,7 @@ private fun Sidebar(
             .background(c.sidebar)
             .padding(horizontal = 14.dp, vertical = 20.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 8.dp, bottom = 26.dp)) {
-            Box(Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(c.accentBrush), contentAlignment = Alignment.Center) {
-                Text("S", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-            }
-            Spacer(Modifier.width(10.dp))
-            Text("Syncro", style = MaterialTheme.typography.headlineSmall, color = c.text)
-        }
+        Wordmark(Modifier.padding(start = 8.dp, bottom = 26.dp))
         NavItem("Share", Icons.Rounded.Send, page == Page.SHARE) { onPage(Page.SHARE) }
         NavItem("Activity", Icons.Rounded.History, page == Page.ACTIVITY, badge = activeCount.takeIf { it > 0 }) { onPage(Page.ACTIVITY) }
         NavItem("Devices", Icons.Rounded.Devices, page == Page.DEVICES) { onPage(Page.DEVICES) }

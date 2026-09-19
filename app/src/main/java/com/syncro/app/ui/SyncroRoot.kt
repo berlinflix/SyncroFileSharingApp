@@ -230,7 +230,13 @@ private fun MainContent(vm: AppViewModel, onRequestPermissions: () -> Unit) {
 
     Box(Modifier.fillMaxSize().navigationBarsPadding().padding(16.dp), contentAlignment = Alignment.BottomCenter) {
         SnackbarHost(snackbar) { data ->
-            Snackbar(data, containerColor = Syncro.colors.surfaceHigh, contentColor = Syncro.colors.text, actionColor = Syncro.colors.accent)
+            Snackbar(
+                data,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                containerColor = Syncro.colors.surfaceHigh,
+                contentColor = Syncro.colors.text,
+                actionColor = Syncro.colors.accent,
+            )
         }
     }
 }

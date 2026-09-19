@@ -1,6 +1,7 @@
 package com.syncro.desktop.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -12,7 +13,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.platform.Font
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Immutable
@@ -77,7 +81,15 @@ object Theme {
         @Composable get() = LocalPalette.current
 }
 
-private val AppTypography = Typography(
+/** Roboto, the design system's typeface, bundled so Windows doesn't fall back to Segoe UI. */
+private val Roboto = FontFamily(
+    Font("font/roboto_regular.ttf", FontWeight.Normal),
+    Font("font/roboto_medium.ttf", FontWeight.Medium),
+    Font("font/roboto_semibold.ttf", FontWeight.SemiBold),
+    Font("font/roboto_bold.ttf", FontWeight.Bold),
+)
+
+private val BaseTypography = Typography(
     displaySmall = TextStyle(fontSize = 32.sp, lineHeight = 38.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.6).sp),
     headlineSmall = TextStyle(fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.4).sp),
     titleLarge = TextStyle(fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.SemiBold),
@@ -90,6 +102,17 @@ private val AppTypography = Typography(
     labelMedium = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
     labelSmall = TextStyle(fontSize = 10.5.sp, lineHeight = 14.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.6.sp),
 )
+
+private val AppTypography = BaseTypography.run {
+    fun TextStyle.roboto() = copy(fontFamily = Roboto)
+    Typography(
+        displayLarge = displayLarge.roboto(), displayMedium = displayMedium.roboto(), displaySmall = displaySmall.roboto(),
+        headlineLarge = headlineLarge.roboto(), headlineMedium = headlineMedium.roboto(), headlineSmall = headlineSmall.roboto(),
+        titleLarge = titleLarge.roboto(), titleMedium = titleMedium.roboto(), titleSmall = titleSmall.roboto(),
+        bodyLarge = bodyLarge.roboto(), bodyMedium = bodyMedium.roboto(), bodySmall = bodySmall.roboto(),
+        labelLarge = labelLarge.roboto(), labelMedium = labelMedium.roboto(), labelSmall = labelSmall.roboto(),
+    )
+}
 
 @Composable
 fun SyncroDesktopTheme(mode: String, content: @Composable () -> Unit) {
@@ -112,7 +135,8 @@ fun SyncroDesktopTheme(mode: String, content: @Composable () -> Unit) {
             surfaceContainer = p.surface, surfaceContainerHigh = p.surfaceHigh, outline = p.outline, outlineVariant = p.outline, error = p.danger,
         )
     }
-    CompositionLocalProvider(LocalPalette provides p) {
+    // Mouse-driven UI: no 48dp touch padding around switches, checkboxes and icon buttons.
+    CompositionLocalProvider(LocalPalette provides p, LocalMinimumInteractiveComponentSize provides 0.dp) {
         MaterialTheme(colorScheme = scheme, typography = AppTypography, content = content)
     }
 }

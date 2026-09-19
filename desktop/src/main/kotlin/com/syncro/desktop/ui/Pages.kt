@@ -72,11 +72,11 @@ import com.syncro.core.transfer.TransferInfo
 import com.syncro.core.transfer.TransferPhase
 import com.syncro.core.util.Format
 import com.syncro.desktop.DesktopController
+import com.syncro.desktop.DesktopDialog
 import com.syncro.desktop.Platform
 import java.io.File
 import java.text.DateFormat
 import java.util.Date
-import javax.swing.JFileChooser
 
 @Composable
 fun TransferCard(
@@ -385,15 +385,7 @@ fun SettingsPage(controller: DesktopController, window: java.awt.Window) {
                 Column {
                     SectionTitle("This computer")
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it.take(40) },
-                            label = { Text("Device name") },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = c.accent, unfocusedBorderColor = c.outline, focusedLabelColor = c.accent),
-                            modifier = Modifier.weight(1f),
-                        )
+                        SyncroInput(name, { name = it.take(40) }, Modifier.weight(1f), label = "Device name")
                         Spacer(Modifier.width(10.dp))
                         PrimaryButton("Save", onClick = { controller.graph.settings.update { it.copy(deviceName = name.trim().ifEmpty { it.deviceName }) } }, enabled = name.isNotBlank() && name != settings.deviceName)
                     }
@@ -405,15 +397,7 @@ fun SettingsPage(controller: DesktopController, window: java.awt.Window) {
                             Text("Save received files to", style = MaterialTheme.typography.titleSmall, color = c.text)
                             Text(settings.downloadDir, style = MaterialTheme.typography.bodySmall, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                        SecondaryButton("Change", onClick = {
-                            val chooser = JFileChooser(settings.downloadDir).apply {
-                                fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-                                dialogTitle = "Choose where Syncro saves files"
-                            }
-                            if (chooser.showOpenDialog(window) == JFileChooser.APPROVE_OPTION) {
-                                controller.graph.settings.update { it.copy(downloadDir = chooser.selectedFile.absolutePath) }
-                            }
-                        })
+                        SecondaryButton("Change", onClick = { controller.showDialog(DesktopDialog.CHOOSE_FOLDER) })
                         Spacer(Modifier.width(8.dp))
                         SecondaryButton("Open", onClick = { Platform.openFolder(File(settings.downloadDir)) })
                     }

@@ -42,6 +42,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +62,7 @@ import com.syncro.app.ui.components.DeviceAvatar
 import com.syncro.app.ui.components.IconBubble
 import com.syncro.app.ui.components.SectionLabel
 import com.syncro.app.ui.components.SyncroCard
+import com.syncro.app.ui.components.Wordmark
 import com.syncro.app.ui.theme.Syncro
 import com.syncro.core.DeviceType
 import com.syncro.core.store.HistoryEntry
@@ -187,24 +190,6 @@ fun HomeScreen(
 }
 
 @Composable
-private fun Wordmark(modifier: Modifier = Modifier) {
-    val colors = Syncro.colors
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            Modifier
-                .size(30.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(colors.accentBrush),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("S", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-        }
-        Spacer(Modifier.width(10.dp))
-        Text("Syncro", style = MaterialTheme.typography.headlineSmall, color = colors.text)
-    }
-}
-
-@Composable
 private fun VisibilityCard(
     deviceName: String,
     deviceType: DeviceType,
@@ -239,17 +224,19 @@ private fun VisibilityCard(
                         Text(status, style = MaterialTheme.typography.bodySmall, color = colors.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
-                Switch(
-                    checked = visible,
-                    onCheckedChange = actions.onToggleVisible,
-                    colors = SwitchDefaults.colors(
-                        checkedTrackColor = colors.accent,
-                        checkedThumbColor = colors.onAccent,
-                        uncheckedTrackColor = colors.surfaceHigh,
-                        uncheckedBorderColor = colors.outline,
-                        uncheckedThumbColor = colors.textMuted,
-                    ),
-                )
+                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                    Switch(
+                        checked = visible,
+                        onCheckedChange = actions.onToggleVisible,
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = colors.accent,
+                            checkedThumbColor = colors.onAccent,
+                            uncheckedTrackColor = colors.surfaceHigh,
+                            uncheckedBorderColor = colors.outline,
+                            uncheckedThumbColor = colors.textMuted,
+                        ),
+                    )
+                }
             }
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {

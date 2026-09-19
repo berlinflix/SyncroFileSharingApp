@@ -1,6 +1,11 @@
 package com.syncro.app.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -160,12 +165,29 @@ fun SettingsScreen(state: SettingsState, actions: SettingsActions) {
                             Text("Theme", style = MaterialTheme.typography.titleSmall, color = colors.text)
                             Text(state.theme.label(), style = MaterialTheme.typography.bodySmall, color = colors.textMuted)
                         }
-                        DropdownMenu(expanded = themeMenu, onDismissRequest = { themeMenu = false }) {
+                        DropdownMenu(
+                            expanded = themeMenu,
+                            onDismissRequest = { themeMenu = false },
+                            shape = RoundedCornerShape(14.dp),
+                            containerColor = colors.surfaceHigh,
+                            border = BorderStroke(1.dp, colors.outline),
+                            tonalElevation = 0.dp,
+                            shadowElevation = 0.dp,
+                            modifier = Modifier.widthIn(min = 200.dp),
+                        ) {
                             ThemeMode.entries.forEach { mode ->
-                                DropdownMenuItem(text = { Text(mode.label()) }, onClick = {
-                                    themeMenu = false
-                                    actions.onTheme(mode)
-                                })
+                                DropdownMenuItem(
+                                    text = { Text(mode.label(), style = MaterialTheme.typography.bodyLarge, color = colors.text) },
+                                    leadingIcon = {
+                                        Box(Modifier.size(18.dp)) {
+                                            if (mode == state.theme) Icon(Icons.Rounded.Check, null, tint = colors.accent, modifier = Modifier.size(18.dp))
+                                        }
+                                    },
+                                    onClick = {
+                                        themeMenu = false
+                                        actions.onTheme(mode)
+                                    },
+                                )
                             }
                         }
                     }

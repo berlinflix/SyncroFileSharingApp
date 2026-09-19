@@ -19,7 +19,6 @@ import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.OpenInNew
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.syncro.app.ui.components.ScreenTopBar
 import com.syncro.app.ui.components.SyncroCard
+import com.syncro.app.ui.components.SyncroAlertDialog
 import com.syncro.app.ui.copyToClipboard
 import com.syncro.app.ui.iconForFile
 import com.syncro.app.ui.openReceivedFile
@@ -124,18 +124,16 @@ fun HistoryScreen(
     }
 
     if (confirmClear) {
-        AlertDialog(
-            onDismissRequest = { confirmClear = false },
-            title = { Text("Clear history?") },
-            text = { Text("Received files stay in Downloads/Syncro. Only the list is cleared.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmClear = false
-                    onClear()
-                }) { Text("Clear", color = colors.danger) }
+        SyncroAlertDialog(
+            title = "Clear history?",
+            confirmText = "Clear",
+            onConfirm = {
+                confirmClear = false
+                onClear()
             },
-            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } },
-            containerColor = colors.surface,
-        )
+            onDismiss = { confirmClear = false },
+        ) {
+            Text("Received files stay in Downloads/Syncro. Only the list is cleared.", style = MaterialTheme.typography.bodyMedium, color = colors.text)
+        }
     }
 }

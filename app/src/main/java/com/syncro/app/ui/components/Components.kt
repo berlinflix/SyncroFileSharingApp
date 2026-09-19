@@ -42,6 +42,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -366,16 +368,19 @@ fun SettingSwitch(
             if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.textMuted)
         }
         Spacer(Modifier.width(12.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedTrackColor = colors.accent,
-                checkedThumbColor = colors.onAccent,
-                uncheckedTrackColor = colors.surfaceHigh,
-                uncheckedBorderColor = colors.outline,
-                uncheckedThumbColor = colors.textMuted,
-            ),
-        )
+        // The whole row is the touch target, so the switch itself needs no extra 48dp padding.
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = colors.accent,
+                    checkedThumbColor = colors.onAccent,
+                    uncheckedTrackColor = colors.surfaceHigh,
+                    uncheckedBorderColor = colors.outline,
+                    uncheckedThumbColor = colors.textMuted,
+                ),
+            )
+        }
     }
 }
