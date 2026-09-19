@@ -6,6 +6,15 @@ Fast, end-to-end encrypted file sharing between Android phones and PCs. Think Qu
 - **Syncro for Windows** (`desktop/`): Compose for Desktop, also runs on macOS/Linux
 - **Shared core** (`core/`): the protocol, crypto, discovery and transfer engine, written once in Kotlin and used by both apps
 
+## Download
+
+Get the latest build from [Releases](https://github.com/berlinflix/SyncroFileSharingApp/releases):
+
+- **Windows:** `SyncroSetup-<version>.exe`. It installs for your user only, so no admin rights are needed.
+- **Android:** `Syncro-<version>.apk`.
+
+Every push is built and tested by GitHub Actions. Pushing a `v*` tag publishes a release with both files.
+
 ## Features
 
 - Send any number of files, photos, videos and text or links, with no size limit. Files stream straight to disk and are never held in memory.

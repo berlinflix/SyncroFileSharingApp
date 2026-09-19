@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A full JDK (with jpackage) builds the Android app and packages the desktop app.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Test the protocol core
+        run: ./gradlew :core:test --no-daemon
+
+      - name: Build the Android app
+        run: ./gradlew :app:assembleRelease --no-daemon
+
+      - name: Build Syncro Setup for Windows
+        shell: pwsh
+        run: ./gradlew :desktop:packageSetup "-Psyncro.packagingJdk=$env:JAVA_HOME" --no-daemon
+
+      - name: Collect artifacts
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '2.0.0' }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item desktop/build/setup/SyncroSetup-*.exe dist/
+          Copy-Item app/build/outputs/apk/release/app-release.apk "dist/Syncro-$version.apk"
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: syncro-${{ github.sha }}
+          path: dist/*
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Syncro ${{ github.ref_name }}
+          files: dist/*
+          body: |
+            **Windows:** download `SyncroSetup-*.exe` and run it. It installs for your user only, so no admin rights are needed. When Windows asks, allow Syncro on private networks so your phone can find the PC.
+
+            **Android:** download the `.apk` and open it on your phone (allow installs from your browser or file manager when asked).
+
+            Both apps find each other on the same Wi-Fi or hotspot, or you can scan the QR code shown on the PC. Phones can also share with each other directly with no shared network.
