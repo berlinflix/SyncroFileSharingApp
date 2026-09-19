@@ -15,7 +15,8 @@ Fast, end-to-end encrypted file sharing between Android phones and PCs. Think Qu
 - Share from any app through the Android share sheet. Drag and drop onto the desktop app.
 - Background receiving through a foreground service, with progress notifications and Accept/Decline actions.
 - Transfer history, a list of known devices, and light and dark themes.
-- Desktop: tray icon, notifications, a single-instance app, and a headless CLI.
+- Desktop: a frameless window with Syncro's own title bar, tray icon, notifications, a single-instance app, and a headless CLI.
+- A branded, single-file Windows installer (`SyncroSetup.exe`) that needs no admin rights and uninstalls cleanly.
 
 ## How it works
 
@@ -63,6 +64,7 @@ On real hardware the Wi-Fi link is the bottleneck.
 core/     Protocol, crypto, LAN transport, engine, stores (pure Kotlin/JVM, unit-tested)
 app/      Android app: UI (ui/), Nearby transport (net/), MediaStore storage (data/), service/
 desktop/  Windows/macOS/Linux app: UI (ui/), settings, tray, CLI
+installer/  SyncroSetup.exe: WPF setup UI (Setup.xaml), install/uninstall logic, build script
 ```
 
 ## Building
@@ -85,12 +87,30 @@ Windows installers need a full JDK that includes `jpackage`:
 
 Output goes to `desktop/build/compose/binaries/main-release/{msi,exe}/`.
 
+### Syncro Setup (branded installer)
+
+```bash
+./gradlew :desktop:packageSetup -Psyncro.packagingJdk="C:/path/to/jdk-21"
+```
+
+This builds `desktop/build/setup/SyncroSetup-2.0.0.exe`, one self-contained file with the whole app inside. It uses the .NET Framework 4.8 C# compiler and WPF that come with Windows 10 and 11, so there's nothing extra to install.
+
+- Installs for the current user into `%LOCALAPPDATA%\Programs\Syncro`, with no admin prompt.
+- Options: a desktop shortcut, starting with Windows (in the tray, ready to receive), and opening Syncro when done.
+- Detects an existing install and offers to update it, keeping settings and trusted devices.
+- Registers in Settings > Apps. Uninstalling can optionally remove settings and device keys too.
+- Flags for scripted installs: `/S` (silent), `/D=<folder>`, `/uninstall`, and `/uninstall /S`.
+
 ### Desktop CLI
 
 ```bash
 Syncro receive [--dir DIR] [--name NAME] [--port PORT]
 Syncro send <ip[:port] | syncro://…> <file | text:message>...
 ```
+
+## Credits
+
+The Roboto typeface bundled with the desktop app and installer is licensed under the SIL Open Font License 1.1 (`desktop/src/main/resources/font/LICENSE-Roboto.txt`).
 
 ## Network requirements
 
